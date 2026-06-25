@@ -1,0 +1,67 @@
+[tool.poetry]
+name = "enterprise-data-analysis-platform"
+version = "0.1.0"
+description = "企业智能数据分析平台 - 基于LangGraph的多Agent NL2SQL系统"
+authors = ["dev"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# 编排层
+langgraph = "^0.2.0"
+langchain = "^0.3.0"
+langchain-core = "^0.3.0"
+langchain-community = "^0.3.0"
+langchain-openai = "^0.2.0"
+# 后端框架
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+sse-starlette = "^2.1.0"
+# 数据层
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.0"}
+asyncpg = "^0.30.0"
+alembic = "^1.14.0"
+pgvector = "^0.3.0"                # ★ 新增: pgvector Python 客户端
+redis = "^5.2.0"
+# MinIO 客户端
+minio = "^7.2.0"                   # ★ 新增
+# 安全
+sqlparse = "^0.5.0"
+# 配置
+pydantic = "^2.0.0"
+pydantic-settings = "^2.0.0"
+# 可观测
+langfuse = "^2.50.0"
+# 工具
+python-dotenv = "^1.0.0"
+httpx = "^0.28.0"
+# ★ 新增: 文档解析
+pymupdf = "^1.24.0"
+paddleocr = "^2.9.0"
+paddlepaddle = "^3.0.0"
+python-docx = "^1.1.0"
+unstructured = "^0.16.0"
+layoutparser = "^0.3.0"
+# ★ 新增: 嵌入服务客户端
+sentence-transformers = "^3.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
