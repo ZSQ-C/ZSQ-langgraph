@@ -36,6 +36,8 @@ langfuse = "^2.50.0"
 # 工具
 python-dotenv = "^1.0.0"
 httpx = "^0.28.0"
+pyjwt = "^2.9.0"
+bcrypt = "^4.1.0"
 # ★ 新增: 文档解析
 pymupdf = "^1.24.0"
 paddleocr = "^2.9.0"

@@ -11,8 +11,16 @@ class Settings(BaseSettings):
     """应用全局配置"""
 
     # ========== 数据库配置 ==========
-    read_only_db_url: str = "postgresql+asyncpg://eda_admin:eda_admin_123@localhost:5432/eda_platform"
-    admin_db_url: str = "postgresql+asyncpg://eda_admin:eda_admin_123@localhost:5432/eda_platform"
+    # MySQL (Docker本地): mysql+aiomysql://root:eda_admin_123@localhost:3306/eda_platform
+    # SQLite (零配置): sqlite+aiosqlite:///./eda_platform.db
+    read_only_db_url: str = "mysql+aiomysql://root:eda_admin_123@localhost:3306/eda_platform"
+    admin_db_url: str = "mysql+aiomysql://root:eda_admin_123@localhost:3306/eda_platform"
+    use_postgres: bool = False  # PostgreSQL+pgvector 需要Docker下载镜像
+    # Neo4j + Elasticsearch
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "eda_admin_123"
+    elasticsearch_url: str = "http://localhost:9200"
 
     # ========== Redis 配置 ==========
     redis_url: str = "redis://localhost:6379/0"
@@ -62,6 +70,7 @@ class Settings(BaseSettings):
     # ========== 应用配置 ==========
     app_name: str = "企业智能数据分析平台"
     debug: bool = False
+    demo_mode: bool = True  # 演示模式：无LLM API Key时模拟Agent响应
 
     model_config = {
         "env_file": ".env",

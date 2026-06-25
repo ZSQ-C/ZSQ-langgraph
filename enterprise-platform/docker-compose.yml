@@ -1,0 +1,77 @@
+services:
+  # PostgreSQL 16 + pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: eda-postgres
+    environment:
+      POSTGRES_USER: eda_admin
+      POSTGRES_PASSWORD: eda_admin_123
+      POSTGRES_DB: eda_platform
+    ports: ["5432:5432"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/01_init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eda_admin -d eda_platform"]
+      interval: 5s
+
+  # Redis 7
+  redis:
+    image: redis:7-alpine
+    container_name: eda-redis
+    command: redis-server --appendonly yes
+    ports: ["6379:6379"]
+    volumes: [redis_data:/data]
+
+  # MinIO
+  minio:
+    image: minio/minio:latest
+    container_name: eda-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio_data:/data]
+
+  # BGE-M3 嵌入服务
+  bge-m3:
+    image: ghcr.io/huggingface/text-embeddings-inference:latest
+    container_name: eda-bge-m3
+    command: --model-id BAAI/bge-m3 --port 8002
+    ports: ["8002:8002"]
+    volumes: [bge_cache:/data]
+
+  # Qwen2.5-7B 轻量模型 (vLLM)
+  qwen:
+    image: vllm/vllm-openai:latest
+    container_name: eda-qwen
+    command: --model Qwen/Qwen2.5-7B-Instruct --port 8001
+    ports: ["8001:8001"]
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+
+  # FastAPI 主应用
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eda-app
+    ports: ["8000:8000"]
+    environment:
+      - READ_ONLY_DB_URL=postgresql+asyncpg://eda_admin:eda_admin_123@postgres:5432/eda_platform
+      - ADMIN_DB_URL=postgresql+asyncpg://eda_admin:eda_admin_123@postgres:5432/eda_platform
+      - REDIS_URL=redis://redis:6379/0
+      - MINIO_ENDPOINT=minio:9000
+      - BGE_API_BASE=http://bge-m3:8002/v1
+      - QWEN_API_BASE=http://qwen:8001/v1
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    depends_on: [postgres, redis, minio, bge-m3]
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  bge_cache:

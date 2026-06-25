@@ -1,0 +1,79 @@
+"""
+权限映射配置文件
+
+定义RBAC权限体系，运行时加载。
+实际权限数据存储在数据库roles表中，此文件作为初始参考。
+"""
+
+# 角色权限定义
+ROLES = {
+    "admin": {
+        "description": "管理员，拥有所有表的所有权限",
+        "table_permissions": {
+            "sales": ["read"],
+            "orders": ["read"],
+            "employees": ["read"],
+        },
+        "field_permissions": {
+            "sales": ["*"],  # 所有字段
+            "orders": ["*"],
+            "employees": ["*"],
+        },
+        "row_conditions": {
+            "sales": "1=1",  # 无行级限制
+            "orders": "1=1",
+            "employees": "1=1",
+        },
+        "can_export": True,
+        "max_query_rows": 10000,
+    },
+    "manager": {
+        "description": "部门经理，只能查看本部门数据，敏感字段受限",
+        "table_permissions": {
+            "sales": ["read"],
+            "orders": ["read"],
+            "employees": ["read"],
+        },
+        "field_permissions": {
+            "sales": ["id", "product_name", "category", "amount", "quantity", "sale_date", "dept", "salesperson"],
+            "orders": ["id", "order_no", "customer_name", "product_line", "amount", "status", "order_date", "dept"],
+            "employees": ["id", "name", "dept", "position", "hire_date"],
+        },
+        "row_conditions": {
+            "sales": "dept = '{{user_dept}}'",
+            "orders": "dept = '{{user_dept}}'",
+            "employees": "dept = '{{user_dept}}'",
+        },
+        "can_export": True,
+        "max_query_rows": 5000,
+    },
+    "analyst": {
+        "description": "数据分析师，可查看销售和订单数据，不可看员工敏感信息",
+        "table_permissions": {
+            "sales": ["read"],
+            "orders": ["read"],
+        },
+        "field_permissions": {
+            "sales": ["id", "product_name", "category", "amount", "quantity", "sale_date", "dept"],
+            "orders": ["id", "order_no", "product_line", "amount", "status", "order_date", "dept"],
+        },
+        "row_conditions": {
+            "sales": "dept = '{{user_dept}}'",
+            "orders": "dept = '{{user_dept}}'",
+        },
+        "can_export": False,
+        "max_query_rows": 1000,
+    },
+}
+
+# 敏感字段列表（所有角色都需要脱敏）
+SENSITIVE_FIELDS = [
+    "phone",
+    "customer_phone",
+    "id_card",
+    "email",
+    "customer_email",
+    "salary",
+    "bank_account",
+    "password",
+]
